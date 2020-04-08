@@ -23,7 +23,7 @@ from setuptools.command.build_py import build_py as _build_py
 from distutils.command.build_ext import build_ext as _build_ext
 
 import subprocess
-import urllib.request, urllib.parse, urllib.error
+import urllib
 import tempfile
 import shutil
 
@@ -72,12 +72,12 @@ def download(type, target_dir=None):
     jenkins_src = "%s/current-%s.tar.gz" % (parent_dir, type)
 
     if os.path.exists(jenkins_src):
-        print("copy jenkins build for", type)
+        print "copy jenkins build for", type
         shutil.copyfile(jenkins_src, target)
     else:
         if not os.path.exists(target):
-            print("Downloading %s bundle from %s to %s" % (type, base_url, target))
-            urllib.request.urlretrieve(base_url, target)
+            print "Downloading %s bundle from %s to %s" % (type, base_url, target)
+            urllib.urlretrieve(base_url, target)
 
 
 class fetch(Command):
@@ -86,7 +86,7 @@ class fetch(Command):
     user_options = []
 
     def run(self):
-        print("Fetching binaries")
+        print "Fetching binaries"
         download("i3")
         download("core2")
 
@@ -103,7 +103,7 @@ class package(Command):
     user_options = []
 
     def run(self):
-        print("Fetching binaries")
+        print "Fetching binaries"
         download("i3")
         download("core2")
         subprocess.Popen(["dist-utils/create_distribution.sh", __VERSION__, "i3"]).wait()
@@ -121,7 +121,7 @@ class package_static(Command):
     user_options = []
 
     def run(self):
-        print("Fetching binaries")
+        print "Fetching binaries"
         download("i3")
         download("core2")
         subprocess.Popen(["dist-utils/create_static_distribution.sh", __VERSION__, "i3"]).wait()
@@ -139,7 +139,7 @@ def _install_bundle(install_dir, base=None):
     the bundled executables into the given target directory
     """
     if install_dir is None:
-        print("Unable to determine installation directory !")
+        print "Unable to determine installation directory !"
         exit(1)
 
     # pick the type
@@ -178,7 +178,7 @@ def _install_bundle(install_dir, base=None):
 
     tar = subprocess.Popen("tar xzf %s --exclude \"._*\"" % (os.path.abspath(target)), shell=True, cwd=dirpath)
     if tar.wait() != 0:
-        print("Error while extracting gem bundle")
+        print "Error while extracting gem bundle"
         exit(1)
     if base is None and not keep:
         os.remove(target)
@@ -186,22 +186,22 @@ def _install_bundle(install_dir, base=None):
     bins = [x for x in os.listdir(dirpath)]
     for file in bins:
         if not file.endswith("gz"):
-            print("Move bundle library: %s to %s" % (file, install_dir))
+            print "Move bundle library: %s to %s" % (file, install_dir)
             result_file = "%s/%s" % (install_dir, file)
             if os.path.exists(result_file):
                 os.remove(result_file)
             shutil.move("%s/%s" % (dirpath, file), install_dir)
-            os.chmod(result_file, 0o755)
+            os.chmod(result_file, 0755)
     # copy gt.* binaries
     bins = [x for x in os.listdir("GEMTools/bin")]
     for file in bins:
         if not file.endswith("gz") and file != "gt.construct":
-            print("Copy binary library: %s to %s" % (file, install_dir))
+            print "Copy binary library: %s to %s" % (file, install_dir)
             result_file = "%s/%s" % (install_dir, file)
             if os.path.exists(result_file):
                 os.remove(result_file)
             shutil.copy("%s/%s" % ("GEMTools/bin", file), install_dir)
-            os.chmod(result_file, 0o755)
+            os.chmod(result_file, 0755)
 
 
     # remove temp directory
@@ -238,7 +238,7 @@ class install(_install):
 def compile_gemtools():
         process = subprocess.Popen(['make'], shell=True, cwd='GEMTools')
         if process.wait() != 0:
-            print("""
+            print >> sys.stderr, """
 
 Error while compiling GEMTools. That is very unfortunate.
 
@@ -258,7 +258,7 @@ On a Debian/Ubuntu system you should be able to get all needed dependencies with
 
 sudo apt-get install make gcc python-dev libbz2-dev
 
-""", file=sys.stderr)
+"""
             exit(1)
 
 class build_ext(_build_ext):
